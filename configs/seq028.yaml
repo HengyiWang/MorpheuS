@@ -1,0 +1,122 @@
+data:
+  data_dir: ./data/ddeform_seq028
+  depth_scale: 1000.0
+  known_view_scale: 1.0
+  novel_view_scale: 0.25
+  novel_view_scale_final: 0.3
+  novel_view_scale_factor: 1.0
+
+  theta_range: [45, 105]
+  phi_range: [-180, 180]
+  full_theta_range: [45, 105]
+  full_phi_range: [-180, 180]
+
+  angle_overhead: 30 
+  angle_front: 60
+  default_polar: 90.
+  default_azimuth: 0.
+  uniform_sphere_rate: 0.
+  
+
+  outlier_remove: False
+
+
+exp:
+  output: ./exp_2024
+  exp_name: seq004
+  log: log.txt
+  fp16: False
+  save_guidance: True
+  save_guide_intervel: 50
+
+  test_interval: 200
+  mesh_interval: 50
+  mesh_all_interval: 400
+  mesh_all_eval_interval: 400
+
+
+render:
+  step_size: 0.01
+
+train:
+  kf_every: 2
+  trunc: 0.1
+
+  optim: 'adam'
+  lr: 0.0005
+  ema_decay: 0.95
+
+  n_epochs: 2000
+  real_freq: 10
+  virtual_freq: 1
+  warm_up_steps: 100
+  warm_up_end: 200
+  albedo_iter_ratio: 0.1
+  min_ambient_ratio: 0.1
+  textureless_ratio: 0.2
+  freeze_epoch: 400
+
+  
+  progressive_view: False
+  progressive_view_init_ratio: 0.2
+  progressive_level: True
+  real_view_noise: 0.0
+
+  rgb_weight: 5.0
+  mask_weight: 0.5
+  depth_weight: 0.1
+
+  sdf_weight: 10.
+  surf_sdf_weight: 10
+  surf_color_weight: 5.
+  fs_weight: 0.
+
+  normal_smoothness: 0.4
+  normal_smooth_3d: 0.1
+  normal_smooth_3d_t: 0.0
+  normal_smooth_2d: 0.0
+  eik_weight: 0.0
+  normal_dir: False
+  smoothness_std: 0.005
+  topo_none: True
+  
+
+  code_reg: 0.5
+  sdf_reg: 0.0
+  beta_weight: 0.1
+  ori_weight: 0.01
+  entropy_weight: 0.0
+  
+
+  deform_weight: 0.0
+  deform_smooth: 0.0
+  deform_smooth_t: 0.0
+  topo_smooth_t: 0.0
+  
+
+model:
+  deform_dim: 16
+  amb_dim: 2
+
+  use_t: False
+  use_app: False
+  use_joint: True
+  color_grid: True
+  encode_topo: False
+
+  bg_radius: 1.4
+  activation: 'exp'
+
+
+guidance:
+  model: ['zero123']
+  zero123_config: ./pretrained/zero123/sd-objaverse-finetune-c_concat-256.yaml
+  zero123_ckpt: ./pretrained/zero123/105000.ckpt
+  vram_O: False
+
+  t_range: [0.02, 0.5]
+  zero123_guidance_scale: 5.0
+  zero123_train: 'cur_or_one'
+  zero123_grad_weight: 0.01
+  
+  

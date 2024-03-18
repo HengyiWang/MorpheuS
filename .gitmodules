@@ -1,0 +1,4 @@
+[submodule "external/Open3D"]
+	path = external/Open3D
+	url = https://github.com/isl-org/Open3D.git
+	branch = main
