@@ -1,0 +1,8 @@
+data:
+  data_dir: data/kfusion_snoopy
+  render_cameras_name: cameras_sphere.npz
+  object_cameras_name: cameras_sphere.npz
+  depth_scale: 1000.0
+  size_h: 360
+  size_w: 360
+  rot_degree: 0
