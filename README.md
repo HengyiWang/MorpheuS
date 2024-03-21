@@ -19,8 +19,9 @@ This repository contains the code for the paper MorpheuS: Neural Dynamic 360° S
 
 ## Update
 
-- [x] Code for MorpheuS
-- [ ] Code for data pre-processing
+- [ ] Code for visualization of the results
+- [x] Code for data pre-processing [2024-3-21]
+- [x] Code for MorpheuS [2024-3-18]
 
 ## Installation
 
@@ -33,6 +34,8 @@ Please download here: [Google Drive](https://drive.google.com/drive/folders/1mDu
 ```sh
 bash scripts/download_data.sh
 ```
+
+To create your own dataset, please refer to [preprocess](./preprocess/).
 
 ## Run
 

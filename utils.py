@@ -1,5 +1,7 @@
 # Utility functions
 import os
+import cv2
+import copy
 import torch
 import random
 import numpy as np
@@ -109,4 +111,37 @@ def get_sdf_loss(z_vals, target_d, predicted_sdf, truncation, mask=None):
     sdf_loss = ((torch.abs(predicted_sdf - bound) * sdf_mask).sum(dim=-1) / sum_of_samples).sum() / rays_w_depth
 
     return fs_loss, sdf_loss
+
+def load_K_Rt_from_P(filename, P=None):
+    if P is None:
+        lines = open(filename).read().splitlines()
+        if len(lines) == 4:
+            lines = lines[1:]
+        lines = [[x[0], x[1], x[2], x[3]] for x in (x.split(" ") for x in lines)]
+        P = np.asarray(lines).astype(np.float32).squeeze()
+
+    out = cv2.decomposeProjectionMatrix(P)
+    K = out[0]
+    R = out[1]
+    t = out[2]
+
+    K = K / K[2, 2]
+    intrinsics = np.eye(4)
+    intrinsics[:3, :3] = K
+
+    pose = np.eye(4, dtype=np.float32)
+    pose[:3, :3] = R.transpose()
+    pose[:3, 3] = (t[:3] / t[3])[:, 0]
+
+    return intrinsics, pose
+
+def cv2gl(c2w):
+    c2w = copy.deepcopy(c2w)
+    c2w[:, 1] *= -1
+    c2w[:, 2] *= -1
+    return c2w
+
+def gl2cv(c2w):
+    return cv2gl(c2w)
+
 
