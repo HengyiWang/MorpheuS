@@ -23,7 +23,7 @@ data:
 
 exp:
   output: ./exp_2024
-  exp_name: duck
+  exp_name: haru
   log: log.txt
   fp16: False
   save_guidance: True

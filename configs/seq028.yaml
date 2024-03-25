@@ -23,7 +23,7 @@ data:
 
 exp:
   output: ./exp_2024
-  exp_name: seq004
+  exp_name: seq028
   log: log.txt
   fp16: False
   save_guidance: True
