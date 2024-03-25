@@ -19,7 +19,7 @@ This repository contains the code for the paper MorpheuS: Neural Dynamic 360° S
 
 ## Update
 
-- [ ] Code for visualization of the results
+- [x] Code for visualization of the results [2024-3-25]
 - [x] Code for data pre-processing [2024-3-21]
 - [x] Code for MorpheuS [2024-3-18]
 
@@ -43,6 +43,12 @@ You can run MorpheuS using the code below:
 
 ```sh
 python morpheus.py --config './configs/snoopy.yaml'
+```
+
+For visualizing the results, you can use:
+
+```sh
+python visualizer.py --config './configs/snoopy.yaml'
 ```
 
 ## Advanced tips

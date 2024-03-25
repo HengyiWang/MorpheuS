@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 from glob import glob
 from torch.utils.data import Dataset
-from .utils import get_camera_rays, safe_normalize, get_view_direction
+from .utils import get_camera_rays, safe_normalize, get_view_direction, load_K_Rt_from_P
 
 
 class BaseDataset():
@@ -578,3 +578,119 @@ class DeformDataset(BaseDataset):
         return data
 
 
+class RenderDataset(BaseDataset):
+    def __init__(self, config, is_train=True, load=True, test_id=None, outlier_remove=False):
+        super().__init__(config, test_id=test_id, load=load, outlier_remove=outlier_remove)
+        self.poses_ndr, _, scale_mat = self.load_cam_params_ndr()
+        if outlier_remove:
+            self.poses_ndr = self.remove_outlier(self.poses_ndr, thresh=2.0)
+        self.sc_ndr = scale_mat[0][0, 0]
+        
+        self.poses_raw, Ks, _ = self.load_cam_params_raw()
+        if outlier_remove:
+            self.poses = self.remove_outlier(self.poses, thresh=2.0*self.sc_ndr)
+        self.K_raw = Ks[0]
+        self.sc_raw = 1.0
+    
+    def get_align_mat(self):
+        align_mat = np.eye(4)
+        align_mat[1, 1] = -1.
+        align_mat[2, 2] = -1.
+        return align_mat
+    
+    
+    def load_cam_params_raw(self):
+        if os.path.exists(os.path.join(self.data_dir, "cameras.npz")):  # iPhone SLAM poses
+            camera_dict = np.load(os.path.join(self.data_dir, "cameras.npz"))
+            poses = camera_dict["c2w"]
+            intrinsics = np.loadtxt(os.path.join(self.data_dir, "intrinsics.txt"))
+            # scale_mat: used for coordinate normalization, we assume the scene to render is inside a unit sphere at origin.
+            scale_mats_np = [np.eye(4).astype(np.float32) for idx in range(self.num_frames)]
+
+            intrinsics_all = []
+            poses_all = []
+
+            for i, pose in enumerate(poses):
+                align_mat = self.get_align_mat()
+                # flip the world coordinate
+                # pose_align = align_mat @ pose
+                poses_all.append(pose.astype(np.float32))
+                intrinsics_all.append(intrinsics)
+        else:
+            camera_dict = np.load(os.path.join(self.data_dir, "cameras_sphere.npz"))
+            world_mats_np = [camera_dict['world_mat_%d' % idx].astype(np.float32) for idx in range(self.num_frames)]
+            # scale_mat: used for coordinate normalization, we assume the scene to render is inside a unit sphere at origin.
+            scale_mats_np = [np.eye(4).astype(np.float32) for idx in range(self.num_frames)]
+
+            intrinsics_all = []
+            poses_all = []
+
+            for scale_mat, world_mat in zip(scale_mats_np, world_mats_np):
+                P = world_mat @ scale_mat
+                P = P[:3, :4]
+                intrinsics, _ = load_K_Rt_from_P(None, P)
+
+                # Depth
+                intrinsics_all.append(intrinsics)
+                pose = np.eye(4)
+                align_mat = self.get_align_mat()
+                # flip the world coordinate
+                pose_align = align_mat @ pose
+                poses_all.append(pose_align.astype(np.float32))  # the inverse of extrinsic matrix
+
+            intrinsics_all = np.stack(intrinsics_all)
+            poses_all = np.stack(poses_all)
+
+        return poses_all[:self.num_frames], intrinsics_all[:self.num_frames], scale_mats_np
+
+    def load_cam_params_ndr(self):
+        camera_dict = np.load(os.path.join(self.data_dir, "cameras_sphere.npz"))
+        world_mats_np = [camera_dict['world_mat_%d' % idx].astype(np.float32) for idx in range(self.num_frames)]
+        # scale_mat: used for coordinate normalization, we assume the scene to render is inside a unit sphere at origin.
+        scale_mats_np = [camera_dict['scale_mat_%d' % idx].astype(np.float32) for idx in range(self.num_frames)]
+
+        intrinsics_all = []
+        poses_all = []
+
+        for scale_mat, world_mat in zip(scale_mats_np, world_mats_np):
+            P = world_mat @ scale_mat
+            P = P[:3, :4]
+            intrinsics, pose = load_K_Rt_from_P(None, P)
+
+            # Depth
+            intrinsics_all.append(intrinsics)
+            align_mat = self.get_align_mat()
+            pose_align = align_mat @ pose
+            poses_all.append(pose_align.astype(np.float32))  # the inverse of extrinsic matrix
+
+        intrinsics_all = np.stack(intrinsics_all)
+        poses_all = np.stack(poses_all)
+
+        return poses_all[:self.num_frames], intrinsics_all[:self.num_frames], scale_mats_np
+    
+    def load_data(self, test_id=None):
+        """
+        Load the dataset.
+
+        Args:
+            test_id (list): List of indices to select specific samples for testing. Default is None.
+        """
+        print('Real depth')
+        p_images = sorted(glob(os.path.join(self.data_dir, 'rgb/*.png')))
+        if len(p_images) == 0:
+            p_images = sorted(glob(os.path.join(self.data_dir, 'rgb/*.jpg')))
+        p_depths = sorted(glob(os.path.join(self.data_dir, 'depth/*.png')))
+        p_masks = sorted(glob(os.path.join(self.data_dir, 'mask/*.png')))
+        
+        if test_id is not None:
+            p_images = [p_images[i] for i in test_id]
+            p_depths = [p_depths[i] for i in test_id]
+            p_masks = [p_masks[i] for i in test_id]
+        
+        images = np.stack([cv2.cvtColor(cv2.imread(im_name), cv2.COLOR_BGR2RGB) for im_name in p_images]) / 255.0
+        depths = np.stack([cv2.imread(im_name, cv2.IMREAD_UNCHANGED) for im_name in p_depths]) / self.cfg['data']['depth_scale']
+        masks = np.stack([cv2.imread(im_name, cv2.IMREAD_UNCHANGED) for im_name in p_masks]) / 255.0
+        
+        return images, depths, masks
+
+    
