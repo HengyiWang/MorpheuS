@@ -352,7 +352,7 @@ class MorpheuS(nn.Module):
         
         save_dict['ema'] = self.ema.state_dict() if self.ema is not None else None
         save_dict['scaler'] = self.scaler.state_dict()
-        save_dict['estimator'] = self.occupancy_grid
+        save_dict['estimator'] = self.occupancy_grid.state_dict()
         
         torch.save(save_dict, save_path)
         print('Save ckpt to ', save_path)
@@ -413,7 +413,7 @@ class MorpheuS(nn.Module):
         """
         for i in range(self.dataset.num_frames):
             t = i / self.dataset.num_frames
-            self.export_mesh(os.path.join(self.workspace, 'mesh_all', f'mesh_{self.epoch:04d}_{i:04d}.ply'), resolution=resolution, S=S, t=t, color_mesh=color)
+            self.export_mesh(os.path.join(mesh_all_savepath, f'mesh_{self.epoch:04d}_{i:04d}.ply'), resolution=resolution, S=S, t=t, color_mesh=color)
         
     def render_all_meshes(self, mesh_dir, save_images_dir, save_video_dir, epoch, scale=4, 
                           view_360=False, video_name="video_real", save_depths_dir=None, save_video=True):
