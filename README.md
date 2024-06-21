@@ -76,11 +76,12 @@ The research presented here has been supported by a sponsored research award fro
 If you find our code or paper useful for your research, please consider citing:
 
 ```
-@article{wang2023morpheus,
-        title={MorpheuS: Neural Dynamic 360 $\{$$\backslash$deg$\}$ Surface Reconstruction from Monocular RGB-D Video},
+@inproceedings{wang2024morpheus,
+        title={MorpheuS: Neural Dynamic 360deg Surface Reconstruction from Monocular RGB-D Video},
         author={Wang, Hengyi and Wang, Jingwen and Agapito, Lourdes},
-        journal={arXiv preprint arXiv:2312.00778},
-        year={2023}
-}
+        booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+        pages={20965--20976},
+        year={2024}
+      }
 ```
 
